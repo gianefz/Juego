@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>Reto de Cálculo</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: "Comic Sans MS", "Trebuchet MS", Verdana, sans-serif;
+    }
+
+    body {
+      background: #fde6ee;
+      color: #5a3d4d;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 16px;
+    }
+
+    .caja {
+      background-color: #fff5f8;
+      width: 100%;
+      max-width: 440px;
+      border: 3px solid #f4b8cf;
+      border-radius: 22px;
+      padding: 26px 22px;
+      text-align: center;
+      box-shadow: 0 6px 0 #f0c5d6;
+    }
+
+    h1 {
+      color: #d46a91;
+      font-size: 30px;
+      margin-bottom: 8px;
+    }
+
+    .subtitulo {
+      font-size: 16px;
+      margin-bottom: 22px;
+      line-height: 1.5;
+    }
+
+    .pantalla { display: none; }
+    .pantalla.activa { display: block; }
+
+    button {
+      cursor: pointer;
+      border: none;
+      border-radius: 14px;
+      font-size: 18px;
+      padding: 14px 18px;
+      margin: 6px 0;
+      width: 100%;
+      transition: transform 0.08s ease;
+    }
+
+    button:active { transform: scale(0.96); }
+
+    .btn-rosa { background-color: #f48fb1; color: #ffffff; }
+    .btn-rosa:hover { background-color: #ef6e9d; }
+
+    .btn-claro { background-color: #fbd5e2; color: #92526a; }
+    .btn-claro:hover { background-color: #f7c2d4; }
+
+    .btn-fuerte { background-color: #e879a6; color: #ffffff; }
+    .btn-fuerte:hover { background-color: #df5f93; }
+
+    .nivel-titulo {
+      margin: 18px 0 6px;
+      font-size: 17px;
+      color: #b85b80;
+    }
+
+    /* Barra superior del juego */
+    .info {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: #fbd5e2;
+      border-radius: 12px;
+      padding: 10px 14px;
+      margin-bottom: 14px;
+      font-size: 15px;
+      font-weight: bold;
+    }
+
+    .corazones { font-size: 18px; letter-spacing: 2px; }
+
+    /* Barra de progreso */
+    .progreso-fondo {
+      background-color: #fbd5e2;
+      border-radius: 20px;
+      height: 14px;
+      margin-bottom: 18px;
+      overflow: hidden;
+    }
+
+    .progreso-relleno {
+      background-color: #f48fb1;
+      height: 100%;
+      width: 0%;
+      border-radius: 20px;
+      transition: width 0.3s ease;
+    }
+
+    .operacion {
+      font-size: 46px;
+      color: #c75d85;
+      margin: 12px 0 8px;
+    }
+
+    .racha {
+      min-height: 20px;
+      font-size: 14px;
+      color: #d98324;
+      margin-bottom: 14px;
+      font-weight: bold;
+    }
+
+    .opciones {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .opciones button {
+      background-color: #ffffff;
+      border: 2px solid #f4b8cf;
+      color: #8a4862;
+      font-size: 24px;
+      padding: 18px 0;
+    }
+
+    .opciones button:hover { background-color: #fff0f5; }
+    .opciones button.acierto { background-color: #c9f0d6; border-color: #6fc78f; }
+    .opciones button.error { background-color: #f7cccc; border-color: #df9494; }
+
+    .mensaje {
+      min-height: 26px;
+      margin-top: 16px;
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .ok { color: #3fa36b; }
+    .mal { color: #d65a5a; }
+
+    .resultado-grande {
+      font-size: 20px;
+      margin: 14px 0;
+      line-height: 1.6;
+    }
+
+    .puntaje-final {
+      font-size: 42px;
+      color: #d46a91;
+      margin: 10px 0 6px;
+    }
+
+    .detalle-final {
+      font-size: 15px;
+      color: #92526a;
+      margin-bottom: 18px;
+    }
+
+    .pie { margin-top: 18px; font-size: 13px; color: #b08a99; }
+
+    /* Animaciones */
+    @keyframes saltito {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.12); }
+      100% { transform: scale(1); }
+    }
+    @keyframes temblor {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-6px); }
+      75% { transform: translateX(6px); }
+    }
+    .animar-ok { animation: saltito 0.4s ease; }
+    .animar-mal { animation: temblor 0.4s ease; }
+  </style>
+</head>
+<body>
+  <div class="caja">
+
+    <!-- INICIO -->
+    <section id="inicio" class="pantalla activa">
+      <h1>Reto de Cálculo</h1>
+      <p class="subtitulo">
+        Resolvé las operaciones y cuidá tus 3 corazones.<br>
+        Elegí un nivel para empezar.
+      </p>
+
+      <p class="nivel-titulo">Elegí la dificultad:</p>
+      <button class="btn-claro" onclick="iniciarJuego('facil')">Nivel Fácil</button>
+      <button class="btn-rosa" onclick="iniciarJuego('medio')">Nivel Medio</button>
+      <button class="btn-fuerte" onclick="iniciarJuego('dificil')">Nivel Difícil</button>
+
+      <p class="pie">Sumas, restas y multiplicaciones · 10 preguntas</p>
+    </section>
+
+    <!-- JUEGO -->
+    <section id="juego" class="pantalla">
+      <div class="info">
+        <span>Puntos: <span id="puntos">0</span></span>
+        <span class="corazones" id="corazones">❤❤❤</span>
+        <span id="reloj"></span>
+      </div>
+
+      <div class="progreso-fondo">
+        <div class="progreso-relleno" id="progreso"></div>
+      </div>
+
+      <div class="operacion" id="operacion">2 + 2</div>
+      <p class="racha" id="racha"></p>
+
+      <div class="opciones" id="opciones"></div>
+
+      <p class="mensaje" id="mensaje"></p>
+    </section>
+
+    <!-- FIN -->
+    <section id="fin" class="pantalla">
+      <h1 id="tituloFin">¡Terminaste!</h1>
+      <p class="resultado-grande" id="comentarioFin"></p>
+      <p class="puntaje-final"><span id="puntajeFinal">0</span></p>
+      <p class="detalle-final" id="detalleFinal"></p>
+      <button class="btn-rosa" onclick="volverInicio()">Jugar otra vez</button>
+    </section>
+
+  </div>
+
+  <script>
+    // ----- Variables del juego -----
+    let nivel = "facil";
+    let preguntaActual = 0;
+    let puntos = 0;
+    let aciertos = 0;
+    let vidas = 3;
+    let racha = 0;
+    let respuestaCorrecta = 0;
+    let segundosPregunta = 0;
+    let limiteTiempo = 0;
+    let temporizador = null;
+    let bloqueado = false;
+    const TOTAL = 10;
+
+    // ----- Sonidos con código (sin archivos) -----
+    let audioCtx = null;
+    function sonido(frecuencia, duracion) {
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const vol = audioCtx.createGain();
+        osc.frequency.value = frecuencia;
+        osc.type = "sine";
+        osc.connect(vol);
+        vol.connect(audioCtx.destination);
+        vol.gain.setValueAtTime(0.15, audioCtx.currentTime);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duracion);
+      } catch (e) {}
+    }
+    function sonidoBien() { sonido(660, 0.12); setTimeout(() => sonido(880, 0.12), 110); }
+    function sonidoMal() { sonido(200, 0.25); }
+
+    // ----- Cambiar pantalla -----
+    function mostrarPantalla(id) {
+      document.querySelectorAll(".pantalla").forEach(p => p.classList.remove("activa"));
+      document.getElementById(id).classList.add("activa");
+    }
+
+    function azar(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    // ----- Empezar -----
+    function iniciarJuego(nivelElegido) {
+      nivel = nivelElegido;
+      preguntaActual = 0;
+      puntos = 0;
+      aciertos = 0;
+      vidas = 3;
+      racha = 0;
+
+      // Tiempo límite por pregunta según nivel
+      if (nivel === "facil") limiteTiempo = 0;      // sin reloj
+      else if (nivel === "medio") limiteTiempo = 10;
+      else limiteTiempo = 7;
+
+      document.getElementById("puntos").textContent = "0";
+      document.getElementById("corazones").textContent = "❤❤❤";
+      document.getElementById("mensaje").textContent = "";
+      document.getElementById("racha").textContent = "";
+
+      mostrarPantalla("juego");
+      siguientePregunta();
+    }
+
+    // ----- Nueva pregunta -----
+    function siguientePregunta() {
+      bloqueado = false;
+      preguntaActual++;
+
+      // Barra de progreso
+      const porcentaje = ((preguntaActual - 1) / TOTAL) * 100;
+      document.getElementById("progreso").style.width = porcentaje + "%";
+
+      document.getElementById("mensaje").textContent = "";
+
+      const operaciones = ["+", "-", "x"];
+      const signo = operaciones[azar(0, 2)];
+      let a, b;
+
+      if (nivel === "facil") { a = azar(1, 10); b = azar(1, 10); }
+      else if (nivel === "medio") { a = azar(2, 15); b = azar(2, 12); }
+      else { a = azar(5, 25); b = azar(3, 12); }
+
+      if (signo === "-" && b > a) { const t = a; a = b; b = t; }
+
+      if (signo === "+") respuestaCorrecta = a + b;
+      else if (signo === "-") respuestaCorrecta = a - b;
+      else respuestaCorrecta = a * b;
+
+      document.getElementById("operacion").textContent = a + " " + signo + " " + b;
+      generarOpciones();
+      iniciarReloj();
+    }
+
+    // ----- Reloj por pregunta -----
+    function iniciarReloj() {
+      const reloj = document.getElementById("reloj");
+      clearInterval(temporizador);
+
+      if (limiteTiempo === 0) {
+        reloj.textContent = "";
+        return;
+      }
+
+      segundosPregunta = limiteTiempo;
+      reloj.textContent = "⏱ " + segundosPregunta;
+
+      temporizador = setInterval(function () {
+        segundosPregunta--;
+        reloj.textContent = "⏱ " + segundosPregunta;
+        if (segundosPregunta <= 0) {
+          clearInterval(temporizador);
+          tiempoAgotado();
+        }
+      }, 1000);
+    }
+
+    function tiempoAgotado() {
+      if (bloqueado) return;
+      bloqueado = true;
+      perderVida();
+      const mensaje = document.getElementById("mensaje");
+      mensaje.textContent = "¡Se acabó el tiempo! Era " + respuestaCorrecta;
+      mensaje.className = "mensaje mal";
+      sonidoMal();
+      continuar();
+    }
+
+    // ----- Opciones -----
+    function generarOpciones() {
+      const opciones = [respuestaCorrecta];
+      while (opciones.length < 4) {
+        const falsa = respuestaCorrecta + azar(-5, 5);
+        if (falsa >= 0 && !opciones.includes(falsa)) opciones.push(falsa);
+      }
+      opciones.sort(() => Math.random() - 0.5);
+
+      const cont = document.getElementById("opciones");
+      cont.innerHTML = "";
+      opciones.forEach(valor => {
+        const b = document.createElement("button");
+        b.textContent = valor;
+        b.onclick = function () { responder(valor, b); };
+        cont.appendChild(b);
+      });
+    }
+
+    // ----- Responder -----
+    function responder(valor, boton) {
+      if (bloqueado) return;
+      bloqueado = true;
+      clearInterval(temporizador);
+
+      const mensaje = document.getElementById("mensaje");
+      const op = document.getElementById("operacion");
+
+      if (valor === respuestaCorrecta) {
+        aciertos++;
+        racha++;
+        let suma = 10;
+        if (racha >= 3) suma = 15; // bonus por racha
+        puntos += suma;
+        document.getElementById("puntos").textContent = puntos;
+        boton.classList.add("acierto");
+        op.classList.add("animar-ok");
+        mensaje.textContent = "¡Muy bien! +" + suma + " puntos";
+        mensaje.className = "mensaje ok";
+        document.getElementById("racha").textContent = racha >= 3 ? "🔥 ¡En racha de " + racha + "!" : "";
+        sonidoBien();
+      } else {
+        racha = 0;
+        document.getElementById("racha").textContent = "";
+        boton.classList.add("error");
+        op.classList.add("animar-mal");
+        perderVida();
+        mensaje.textContent = "Casi... la respuesta era " + respuestaCorrecta;
+        mensaje.className = "mensaje mal";
+        sonidoMal();
+        // marcar la correcta
+        document.querySelectorAll("#opciones button").forEach(b => {
+          if (b.textContent == respuestaCorrecta) b.classList.add("acierto");
+        });
+      }
+
+      setTimeout(() => { op.classList.remove("animar-ok", "animar-mal"); }, 400);
+      continuar();
+    }
+
+    function perderVida() {
+      vidas--;
+      let corazones = "";
+      for (let i = 0; i < 3; i++) corazones += (i < vidas) ? "❤" : "🤍";
+      document.getElementById("corazones").textContent = corazones;
+    }
+
+    function continuar() {
+      setTimeout(function () {
+        if (vidas <= 0 || preguntaActual >= TOTAL) {
+          terminarJuego();
+        } else {
+          siguientePregunta();
+        }
+      }, 1200);
+    }
+
+    // ----- Fin -----
+    function terminarJuego() {
+      clearInterval(temporizador);
+      document.getElementById("progreso").style.width = "100%";
+      mostrarPantalla("fin");
+
+      document.getElementById("puntajeFinal").textContent = puntos + " pts";
+      document.getElementById("detalleFinal").textContent =
+        "Acertaste " + aciertos + " de " + TOTAL + " preguntas.";
+
+      const titulo = document.getElementById("tituloFin");
+      const comentario = document.getElementById("comentarioFin");
+
+      if (vidas <= 0) {
+        titulo.textContent = "¡Te quedaste sin corazones!";
+        comentario.textContent = "No pasa nada, ¡volvé a intentarlo!";
+      } else if (aciertos >= 8) {
+        titulo.textContent = "¡Ganaste!";
+        comentario.textContent = "¡Excelente! Sos muy rápido con los números.";
+      } else if (aciertos >= 5) {
+        titulo.textContent = "¡Muy bien! ";
+        comentario.textContent = "Vas por buen camino. ¡Seguí practicando!";
+      } else {
+        titulo.textContent = "¡A practicar! 💪";
+        comentario.textContent = "Con un poco más de práctica vas a mejorar.";
+      }
+    }
+
+    function volverInicio() {
+      mostrarPantalla("inicio");
+    }
+  </script>
+</body>
+</html>
